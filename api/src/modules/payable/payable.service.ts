@@ -1,19 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { Payable } from './interfaces/payable.interface';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { CreatePayableDto } from './dtos/create-payable.dto';
+import { Payable } from '@prisma/client';
 
 @Injectable()
 export class PayableService {
-  private readonly payables: Payable[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(cat: Payable) {
-    this.payables.push(cat);
+  async create(createPayableDto: CreatePayableDto): Promise<Payable> {
+    return this.prisma.payable.create({
+      data: {
+        id: createPayableDto.id,
+        value: createPayableDto.value,
+        emissionDate: new Date(createPayableDto.emissionDate),
+        assignor: {
+          connect: { id: createPayableDto.assignor },
+        },
+      },
+    });
   }
 
-  findAll(): Payable[] {
-    return this.payables;
+  async findAll(): Promise<Payable[]> {
+    return this.prisma.payable.findMany();
   }
 
-  findOne(payableId: string): Payable | null {
-    return this.payables.find(({ id }) => id === payableId) ?? null;
+  async findOne(id: string): Promise<Payable | null> {
+    return this.prisma.payable.findUnique({
+      where: { id },
+    });
   }
 }
