@@ -4,31 +4,34 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 model Payable {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   value        Float
   emissionDate DateTime
   assignorId   String
-  assignor     Assignor @relation(fields: [assignorId], references: [id])
-  deletedAt DateTime? @default(dbgenerated())
-}
-
-model Assignor {
-  id       String    @id @default(uuid())
-  document String    @unique
-  email    String
-  phone    String
-  name     String
-  payables Payable[]
-  deletedAt DateTime? @default(dbgenerated())
+  assignor     Assignor  @relation(fields: [assignorId], references: [id])
+  deletedAt    DateTime? @default(dbgenerated())
 }
 
 model User {
-  id       String   @id @default(uuid())
-  username String   @unique
+  id       String     @id @default(uuid())
+  username String     @unique
   password String
+  Assignor Assignor[]
+}
+
+model Assignor {
+  id        String    @id @default(uuid())
+  document  String    @unique
+  email     String
+  phone     String
+  name      String
+  payables  Payable[]
+  deletedAt DateTime? @default(dbgenerated())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
 }
