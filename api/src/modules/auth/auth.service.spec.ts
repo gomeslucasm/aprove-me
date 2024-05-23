@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -40,6 +41,7 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should return user data if credentials are valid', async () => {
       const user = {
+        id: '1234',
         username: 'aprovame',
         password: await bcrypt.hash('aprovame', 10),
       };
@@ -48,7 +50,7 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
 
       const result = await service.validateUser('aprovame', 'aprovame');
-      expect(result).toEqual({ username: 'aprovame' });
+      expect(result).toEqual({ username: user.username, id: user.id });
     });
 
     it('should return null if credentials are invalid', async () => {
@@ -61,10 +63,14 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return an access token', async () => {
-      const user = { login: 'username' };
+      const userId = uuidv4();
+      const user = { id: userId, username: 'username' };
       const result = await service.login(user);
       expect(result).toEqual({ access_token: 'test_token' });
-      expect(jwtService.sign).toHaveBeenCalledWith({ username: 'username' });
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        sub: userId,
+        username: 'username',
+      });
     });
   });
 });

@@ -2,6 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { User } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { AssignorService } from '../assignor/assignor.service';
+import { UserService } from '../user/user.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -18,6 +22,14 @@ describe('AuthController', () => {
             login: jest.fn().mockReturnValue({ access_token: 'access_token' }),
           },
         },
+        {
+          provide: AssignorService,
+          useValue: {},
+        },
+        {
+          provide: UserService,
+          useValue: {},
+        },
       ],
     }).compile();
 
@@ -31,9 +43,13 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('should return an access token if credentials are valid', async () => {
-      jest
-        .spyOn(service, 'validateUser')
-        .mockResolvedValue({ login: 'aprovame' });
+      const mockedUser: User = {
+        username: 'aprovame',
+        id: uuidv4(),
+        password: 'saosajdosaj',
+      };
+
+      jest.spyOn(service, 'validateUser').mockResolvedValue(mockedUser);
 
       const result = await controller.login({
         login: 'aprovame',
@@ -41,7 +57,7 @@ describe('AuthController', () => {
       });
       expect(result).toEqual({ access_token: 'access_token' });
       expect(service.validateUser).toHaveBeenCalledWith('aprovame', 'aprovame');
-      expect(service.login).toHaveBeenCalledWith({ login: 'aprovame' });
+      expect(service.login).toHaveBeenCalledWith(mockedUser);
     });
 
     it('should throw UnauthorizedException if credentials are invalid', async () => {

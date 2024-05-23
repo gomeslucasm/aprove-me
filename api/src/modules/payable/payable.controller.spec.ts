@@ -10,6 +10,8 @@ describe('PayableController', () => {
   let controller: PayableController;
   let service: PayableService;
 
+  const mockedAssignorId = '12312';
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PayableController],
@@ -41,14 +43,13 @@ describe('PayableController', () => {
       id: uuidv4(),
       value: 1000,
       emissionDate: new Date().toISOString(),
-      assignorId: uuidv4(),
     };
 
     const createdPayable = {
       id: createPayableDto.id,
       value: createPayableDto.value,
       emissionDate: new Date(createPayableDto.emissionDate),
-      assignorId: createPayableDto.assignorId,
+      assignorId: mockedAssignorId,
       deletedAt: null,
     };
 
@@ -57,35 +58,6 @@ describe('PayableController', () => {
     const result = await controller.createPayable(createPayableDto);
     expect(result).toEqual(createPayableDto);
     expect(service.create).toHaveBeenCalledWith(createPayableDto);
-  });
-
-  it('should throw ConflictException if assignor already exists', async () => {
-    const createPayableDto: CreatePayableDto = {
-      id: uuidv4(),
-      value: 100.5,
-      emissionDate: new Date().toISOString(),
-      assignorId: 'existing-document',
-    };
-
-    const existingAssignor = {
-      id: uuidv4(),
-      document: 'existing-document',
-      email: 'test@example.com',
-      phone: '1234567890',
-      name: 'Test Assignor',
-      deletedAt: null,
-    };
-
-    jest
-      .spyOn(service, 'findAssignorByDocument')
-      .mockResolvedValue(existingAssignor);
-
-    await expect(controller.createPayable(createPayableDto)).rejects.toThrow(
-      ConflictException,
-    );
-    expect(service.findAssignorByDocument).toHaveBeenCalledWith(
-      createPayableDto.assignorId,
-    );
   });
 
   it('should return all payables', async () => {

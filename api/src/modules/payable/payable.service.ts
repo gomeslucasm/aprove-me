@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreatePayableDto } from './dtos/create-payable.dto';
 import { Payable } from '@prisma/client';
 import { BaseService } from '../../common/base/service';
 
 @Injectable()
 export class PayableService extends BaseService {
-  constructor(prisma: PrismaService) {
-    super(prisma);
+  getPayableBoundariesFilter(): {
+    assignorId: string;
+    deletedAt: null;
+  } {
+    return {
+      assignorId: this.user.assignorId,
+      ...this.getBaseFilter(),
+    };
   }
 
   async create(createPayableDto: CreatePayableDto): Promise<Payable> {
@@ -16,14 +21,14 @@ export class PayableService extends BaseService {
         id: createPayableDto.id,
         value: createPayableDto.value,
         emissionDate: new Date(createPayableDto.emissionDate),
-        assignorId: createPayableDto.assignorId,
+        assignorId: this.user.assignorId,
       },
     });
   }
 
   async findOne(id: string): Promise<Payable | null> {
     return this.prisma.payable.findUnique({
-      where: { id, ...this.getBaseFilter() },
+      where: { id, ...this.getPayableBoundariesFilter() },
     });
   }
 
@@ -31,22 +36,17 @@ export class PayableService extends BaseService {
     return this.prisma.payable.findMany({
       where: {
         ...this.getBaseFilter(),
+        ...this.getPayableBoundariesFilter(),
       },
     });
   }
 
   async softDelete(id: string): Promise<Payable> {
     return this.prisma.payable.update({
-      where: { id, ...this.getBaseFilter() },
+      where: { id, ...this.getPayableBoundariesFilter() },
       data: {
         deletedAt: new Date(),
       },
-    });
-  }
-
-  async findAssignorByDocument(document: string) {
-    return this.prisma.assignor.findUnique({
-      where: { ...this.getBaseFilter(), document },
     });
   }
 }

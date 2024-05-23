@@ -6,7 +6,6 @@ import {
   Param,
   Get,
   Delete,
-  ConflictException,
   UseGuards,
 } from '@nestjs/common';
 import { CreatePayableDto } from './dtos/create-payable.dto';
@@ -23,14 +22,6 @@ export class PayableController {
   async createPayable(
     @Body() createPayableDto: CreatePayableDto,
   ): Promise<CreatePayableDto> {
-    const existingAssignor = await this.payableService.findAssignorByDocument(
-      createPayableDto.assignorId,
-    );
-    if (existingAssignor) {
-      throw new ConflictException(
-        `Assignor with document ${createPayableDto.assignorId} already exists`,
-      );
-    }
     await this.payableService.create(createPayableDto);
     return createPayableDto;
   }

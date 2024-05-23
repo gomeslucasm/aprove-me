@@ -12,8 +12,4 @@ export class CreatePayableDto {
   @IsDateString()
   @IsNotEmpty()
   emissionDate: string;
-
-  @IsUUID()
-  @IsNotEmpty()
-  assignorId: string;
 }

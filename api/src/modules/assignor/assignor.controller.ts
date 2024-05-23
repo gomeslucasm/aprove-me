@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Param,
-  NotFoundException,
   Post,
   Body,
   Patch,
@@ -36,9 +35,6 @@ export class AssignorController {
   @Get(':id')
   async getAssignor(@Param('id') id: string): Promise<Assignor> {
     const assignor = await this.assignorService.findOne(id);
-    if (!assignor) {
-      throw new NotFoundException(`Assignor with id ${id} not found`);
-    }
     return assignor;
   }
 
@@ -47,19 +43,11 @@ export class AssignorController {
     @Param('id') id: string,
     @Body() updateAssignorDto: UpdateAssignorDto,
   ): Promise<Assignor> {
-    const assignor = await this.assignorService.findOne(id);
-    if (!assignor) {
-      throw new NotFoundException(`Assignor with id ${id} not found`);
-    }
     return this.assignorService.update(id, updateAssignorDto);
   }
 
   @Delete(':id')
   async deleteAssignor(@Param('id') id: string): Promise<Assignor> {
-    const assignor = await this.assignorService.findOne(id);
-    if (!assignor) {
-      throw new NotFoundException(`Assignor with id ${id} not found`);
-    }
     return this.assignorService.softDelete(id);
   }
 }

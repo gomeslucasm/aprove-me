@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
 import { Assignor } from '@prisma/client';
 import { UpdateAssignorDto } from './dtos/update-assignor.dto';
 import { BaseService } from '../../common/base/service';
@@ -7,8 +6,14 @@ import { CreateAssignorDto } from './dtos/create-assignor.dto';
 
 @Injectable()
 export class AssignorService extends BaseService {
-  constructor(prisma: PrismaService) {
-    super(prisma);
+  getPayableBoundariesFilter(): {
+    userId: string;
+    deletedAt: null;
+  } {
+    return {
+      userId: this.user.userId,
+      ...this.getBaseFilter(),
+    };
   }
 
   async findOne(id: string): Promise<Assignor | null> {
@@ -19,14 +24,14 @@ export class AssignorService extends BaseService {
 
   async create(createAssignorDto: CreateAssignorDto): Promise<Assignor> {
     return this.prisma.assignor.create({
-      data: createAssignorDto,
+      data: { ...createAssignorDto, userId: this.user.userId },
     });
   }
 
   async findAll(): Promise<Assignor[]> {
     return this.prisma.assignor.findMany({
       where: {
-        ...this.getBaseFilter(),
+        ...this.getPayableBoundariesFilter(),
       },
     });
   }
@@ -36,14 +41,14 @@ export class AssignorService extends BaseService {
     updateAssignorDto: UpdateAssignorDto,
   ): Promise<Assignor> {
     return this.prisma.assignor.update({
-      where: { ...this.getBaseFilter(), id },
+      where: { ...this.getPayableBoundariesFilter(), id },
       data: updateAssignorDto,
     });
   }
 
   async softDelete(id: string): Promise<Assignor> {
     return this.prisma.assignor.update({
-      where: { id },
+      where: { id, ...this.getPayableBoundariesFilter() },
       data: {
         deletedAt: new Date(),
       },
