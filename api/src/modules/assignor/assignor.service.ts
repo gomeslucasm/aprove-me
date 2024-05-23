@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { Assignor } from '@prisma/client';
 import { UpdateAssignorDto } from './dtos/update-assignor.dto';
-import { BaseService } from 'src/common/base/service';
+import { BaseService } from '../../common/base/service';
 import { CreateAssignorDto } from './dtos/create-assignor.dto';
 
 @Injectable()

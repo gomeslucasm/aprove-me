@@ -3,7 +3,7 @@ import { PayableController } from './payable.controller';
 import { PayableService } from './payable.service';
 import { CreatePayableDto } from './dtos/create-payable.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 import { Payable } from '@prisma/client';
 
 describe('PayableController', () => {
@@ -20,6 +20,9 @@ describe('PayableController', () => {
             create: jest.fn(),
             findAll: jest.fn(),
             findOne: jest.fn(),
+            update: jest.fn(),
+            softDelete: jest.fn(),
+            findAssignorByDocument: jest.fn(),
           },
         },
       ],
@@ -38,14 +41,15 @@ describe('PayableController', () => {
       id: uuidv4(),
       value: 1000,
       emissionDate: new Date().toISOString(),
-      assignor: uuidv4(),
+      assignorId: uuidv4(),
     };
 
     const createdPayable = {
       id: createPayableDto.id,
       value: createPayableDto.value,
       emissionDate: new Date(createPayableDto.emissionDate),
-      assignorId: createPayableDto.assignor,
+      assignorId: createPayableDto.assignorId,
+      deletedAt: null,
     };
 
     jest.spyOn(service, 'create').mockResolvedValue(createdPayable);
@@ -55,13 +59,68 @@ describe('PayableController', () => {
     expect(service.create).toHaveBeenCalledWith(createPayableDto);
   });
 
+  it('should throw ConflictException if assignor already exists', async () => {
+    const createPayableDto: CreatePayableDto = {
+      id: uuidv4(),
+      value: 100.5,
+      emissionDate: new Date().toISOString(),
+      assignorId: 'existing-document',
+    };
+
+    const existingAssignor = {
+      id: uuidv4(),
+      document: 'existing-document',
+      email: 'test@example.com',
+      phone: '1234567890',
+      name: 'Test Assignor',
+      deletedAt: null,
+    };
+
+    jest
+      .spyOn(service, 'findAssignorByDocument')
+      .mockResolvedValue(existingAssignor);
+
+    await expect(controller.createPayable(createPayableDto)).rejects.toThrow(
+      ConflictException,
+    );
+    expect(service.findAssignorByDocument).toHaveBeenCalledWith(
+      createPayableDto.assignorId,
+    );
+  });
+
+  it('should return all payables', async () => {
+    const payables: Payable[] = [
+      {
+        id: uuidv4(),
+        value: 100.5,
+        emissionDate: new Date(),
+        assignorId: uuidv4(),
+        deletedAt: null,
+      },
+      {
+        id: uuidv4(),
+        value: 200.75,
+        emissionDate: new Date(),
+        assignorId: uuidv4(),
+        deletedAt: null,
+      },
+    ];
+
+    jest.spyOn(service, 'findAll').mockResolvedValue(payables);
+
+    const result = await controller.findAll();
+    expect(result).toEqual(payables);
+    expect(service.findAll).toHaveBeenCalled();
+  });
+
   it('should return a payable by id', async () => {
     const payableId = uuidv4();
     const payable: Payable = {
       id: payableId,
-      value: 1000,
+      value: 100.5,
       emissionDate: new Date(),
       assignorId: uuidv4(),
+      deletedAt: null,
     };
 
     jest.spyOn(service, 'findOne').mockResolvedValue(payable);
@@ -76,6 +135,16 @@ describe('PayableController', () => {
     jest.spyOn(service, 'findOne').mockResolvedValue(null);
 
     await expect(controller.getPayable(payableId)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should throw NotFoundException if payable not found when deleting', async () => {
+    const payableId = 'non-existent-id';
+
+    jest.spyOn(service, 'findOne').mockResolvedValue(null);
+
+    await expect(controller.softDeletePayable(payableId)).rejects.toThrow(
       NotFoundException,
     );
   });

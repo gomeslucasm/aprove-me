@@ -115,6 +115,8 @@ describe('AssignorService', () => {
   it('should soft delete an assignor', async () => {
     const assignorId = uuidv4();
 
+    const deletedDate = new Date();
+
     const softDeletedAssignor: Assignor = {
       id: assignorId,
       document: '12345678901',
@@ -132,7 +134,7 @@ describe('AssignorService', () => {
     expect(result).toEqual(softDeletedAssignor);
     expect(prisma.assignor.update).toHaveBeenCalledWith({
       where: { id: assignorId },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: deletedDate },
     });
   });
 });
