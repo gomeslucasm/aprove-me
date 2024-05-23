@@ -25,3 +25,9 @@ model Assignor {
   payables Payable[]
   deletedAt DateTime? @default(dbgenerated())
 }
+
+model User {
+  id       String   @id @default(uuid())
+  username String   @unique
+  password String
+}
