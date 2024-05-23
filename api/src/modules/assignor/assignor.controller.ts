@@ -7,13 +7,16 @@ import {
   Body,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { AssignorService } from './assignor.service';
 import { CreateAssignorDto } from './dtos/create-assignor.dto';
 import { UpdateAssignorDto } from './dtos/update-assignor.dto';
 import { Assignor } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('integrations/assignor')
+@UseGuards(JwtAuthGuard)
 export class AssignorController {
   constructor(private readonly assignorService: AssignorService) {}
 

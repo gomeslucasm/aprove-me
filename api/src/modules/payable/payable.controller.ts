@@ -7,12 +7,15 @@ import {
   Get,
   Delete,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { CreatePayableDto } from './dtos/create-payable.dto';
 import { PayableService } from './payable.service';
 import { Payable } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('integrations/payable')
+@UseGuards(JwtAuthGuard)
 export class PayableController {
   constructor(private readonly payableService: PayableService) {}
 
